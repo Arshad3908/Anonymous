@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Chat - Safe & Private</title>
+    <link rel="icon" type="image/png" href="unnamed.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #475569;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body.light-theme {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-main);
+            color: var(--text);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), #615cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .room-id-display {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: monospace;
+            margin-top: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .share-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .theme-switch {
+            width: 56px;
+            height: 28px;
+            background: var(--bg-input);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid var(--border);
+        }
+
+        .theme-switch-slider {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        body.light-theme .theme-switch-slider {
+            transform: translateX(28px);
+        }
+
+        .chat-view {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px var(--shadow);
+            min-height: 400px;
+        }
+
+        .chat-view::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-view::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-view::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .placeholder-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .placeholder h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .placeholder p {
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+
+        .safety-note {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .safety-note h4 {
+            color: var(--primary);
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .safety-note ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .safety-note li {
+            padding: 8px 0;
+            color: var(--text);
+            font-size: 14px;
+            display: flex;
+            align-items: start;
+            gap: 8px;
+        }
+
+        .safety-note li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+
+        .footer .creator {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .footer .creator:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .chat-message {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            animation: fadeIn 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .message-author {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .message-timestamp {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .message-content {
+            color: var(--text);
+            margin-bottom: 12px;
+            word-wrap: break-word;
+        }
+
+        .message-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .reaction-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .reaction {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .reaction:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+        }
+
+        .reaction.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .message-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: var(--bg-main);
+            color: var(--text);
+        }
+
+        .option-btn.remove:hover {
+            color: var(--danger);
+        }
+
+        .compose-area {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 -2px 8px var(--shadow);
+        }
+
+        .identity-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            justify-content: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .anonymous-btn {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: 15px;
+        }
+
+        .anonymous-btn.enabled {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .message-row {
+            margin-bottom: 12px;
+        }
+
+        .text-area {
+            width: 100%;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .action-row {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .new-room-btn {
+            background: var(--bg-input);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .new-room-btn:hover {
+            background: var(--bg-main);
+            border-color: var(--primary);
+        }
+
+        .action-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--primary), #615cf6);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .secondary-btn {
+            background: var(--bg-input);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .overlay.show {
+            display: flex;
+        }
+
+        .dialog {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 480px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .dialog-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .dialog-close:hover {
+            background: var(--bg-input);
+            color: var(--text);
+        }
+
+        .dialog h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .edit-area {
+            width: 100%;
+            min-height: 120px;
+            margin-bottom: 20px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .share-link-box {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 8px;
+            }
+
+            .top-bar {
+                padding: 16px;
+                flex-wrap: wrap;
+            }
+
+            .action-row {
+                flex-direction: column;
+            }
+
+            .new-room-btn, .action-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="top-bar">
+            <div class="logo-section">
+                <div class="logo">💬</div>
+                <div>
+                    <h1 class="app-title">Anonymous Chat</h1>
+                    <div class="room-id-display" id="roomIdDisplay">Room: Loading...</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="share-btn" id="shareBtn">📋 Share Link</button>
+                <div class="theme-switch" id="themeSwitch">
+                    <div class="theme-switch-slider">🌙</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-view" id="chatView">
+            <div class="placeholder">
+                <div class="placeholder-icon">💭</div>
+                <h3>Welcome to this Chatroom</h3>
+                <p>Share the link to invite others to this conversation</p>
+            </div>
+        </div>
+
+        <div class="compose-area">
+            <div class="identity-row">
+                <button class="anonymous-btn" id="anonymousBtn">
+                    👤 Anonymous
+                </button>
+            </div>
+
+            <div class="message-row">
+                <textarea class="text-area" id="messageField" placeholder="What's on your mind?"></textarea>
+            </div>
+
+            <div class="action-row">
+                <button class="new-room-btn" id="newRoomBtn">➕ New Room</button>
+                <button class="action-button primary-btn" id="submitButton">Send</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Built with ❤️ by <span class="creator">Fakowajo Kehinde</span></p>
+            <p style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">Speak freely. No profiles. No receipts</p>
+        </div>
+    </div>
+
+    <div class="overlay" id="editOverlay">
+        <div class="dialog">
+            <button class="dialog-close" id="dialogClose">×</button>
+            <h2>Edit Message</h2>
+            <textarea class="text-area edit-area" id="editField"></textarea>
+            <div class="dialog-actions">
+                <button class="action-button secondary-btn" id="cancelButton">Cancel</button>
+                <button class="action-button primary-btn" id="saveButton">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="shareOverlay">
+        <div class="dialog">
+            <button class="dialog-close" id="shareDialogClose">×</button>
+            <h2>Share This Room</h2>
+            <p style="color: var(--text-muted); margin-bottom: 12px;">Copy this link to invite others:</p>
+            <div class="share-link-box" id="shareLinkBox"></div>
+            <div class="dialog-actions">
+                <button class="action-button primary-btn" id="copyLinkBtn">📋 Copy Link</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="newRoomOverlay">
+        <div class="dialog">
+            <button class="dialog-close" id="newRoomDialogClose">×</button>
+            <h2>Create New Room</h2>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">Give your room a name (optional):</p>
+            <input type="text" class="input-field" id="roomNameInput" placeholder="e.g., Study Group 🎓 or Team Chat 💼" style="width: 100%; margin-bottom: 20px;">
+            <div class="dialog-actions">
+                <button class="action-button secondary-btn" id="cancelNewRoomBtn">Cancel</button>
+                <button class="action-button primary-btn" id="createRoomBtn">Create Room</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copyNotification">Link copied to clipboard!</div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, push, onValue, remove, update, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDq6dQlaGExNJ696-VpqcqEo7ZeIbn5Iek",
+            authDomain: "mathricks-statisticians.firebaseapp.com",
+            databaseURL: "https://mathricks-statisticians-default-rtdb.firebaseio.com",
+            projectId: "mathricks-statisticians",
+            storageBucket: "mathricks-statisticians.firebasestorage.app",
+            messagingSenderId: "526542953452",
+            appId: "1:526542953452:web:1be468285a2d5d7bde7ec9",
+            measurementId: "G-17GMVQRFW0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Get or create room ID from URL
+        function getRoomId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let roomId = urlParams.get('room');
+            
+            if (!roomId) {
+                roomId = generateRoomId();
+                const newUrl = `${window.location.pathname}?room=${roomId}`;
+                window.history.replaceState({}, '', newUrl);
+            }
+            
+            return roomId;
+        }
+
+        function getRoomName() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('name') || null;
+        }
+
+        function generateRoomId() {
+            return 'room_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        let currentRoomId = getRoomId();
+        let currentRoomName = getRoomName();
+        let messagesRef = ref(db, `rooms/${currentRoomId}/messages`);
+
+        // Get or create user ID
+        let currentUser = localStorage.getItem('userId');
+        if (!currentUser) {
+            currentUser = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('userId', currentUser);
+        }
+
+        const elements = {
+            themeSwitch: document.getElementById('themeSwitch'),
+            anonymousBtn: document.getElementById('anonymousBtn'),
+            messageField: document.getElementById('messageField'),
+            submitButton: document.getElementById('submitButton'),
+            chatView: document.getElementById('chatView'),
+            editOverlay: document.getElementById('editOverlay'),
+            editField: document.getElementById('editField'),
+            dialogClose: document.getElementById('dialogClose'),
+            cancelButton: document.getElementById('cancelButton'),
+            saveButton: document.getElementById('saveButton'),
+            newRoomBtn: document.getElementById('newRoomBtn'),
+            shareBtn: document.getElementById('shareBtn'),
+            shareOverlay: document.getElementById('shareOverlay'),
+            shareDialogClose: document.getElementById('shareDialogClose'),
+            shareLinkBox: document.getElementById('shareLinkBox'),
+            copyLinkBtn: document.getElementById('copyLinkBtn'),
+            copyNotification: document.getElementById('copyNotification'),
+            roomIdDisplay: document.getElementById('roomIdDisplay'),
+            newRoomOverlay: document.getElementById('newRoomOverlay'),
+            newRoomDialogClose: document.getElementById('newRoomDialogClose'),
+            roomNameInput: document.getElementById('roomNameInput'),
+            cancelNewRoomBtn: document.getElementById('cancelNewRoomBtn'),
+            createRoomBtn: document.getElementById('createRoomBtn')
+        };
+
+        // Display room ID and name
+        if (currentRoomName) {
+            elements.roomIdDisplay.textContent = `Room: ${currentRoomName}`;
+        } else {
+            elements.roomIdDisplay.textContent = `Room: ${currentRoomId}`;
+        }
+
+        let isAnonymousMode = false;
+        let editingMessageId = null;
+
+        // Theme toggle
+        elements.themeSwitch.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.querySelector('.theme-switch-slider').textContent = isLight ? '☀️' : '🌙';
+        });
+
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-theme');
+            document.querySelector('.theme-switch-slider').textContent = '☀️';
+        }
+
+        // Anonymous mode toggle
+        elements.anonymousBtn.addEventListener('click', () => {
+            isAnonymousMode = !isAnonymousMode;
+            elements.anonymousBtn.classList.toggle('enabled');
+        });
+
+        // Create new room
+        elements.newRoomBtn.addEventListener('click', () => {
+            elements.newRoomOverlay.classList.add('show');
+            elements.roomNameInput.focus();
+        });
+
+        elements.newRoomDialogClose.addEventListener('click', () => {
+            elements.newRoomOverlay.classList.remove('show');
+            elements.roomNameInput.value = '';
+        });
+
+        elements.cancelNewRoomBtn.addEventListener('click', () => {
+            elements.newRoomOverlay.classList.remove('show');
+            elements.roomNameInput.value = '';
+        });
+
+        elements.createRoomBtn.addEventListener('click', () => {
+            const newRoomId = generateRoomId();
+            const roomName = elements.roomNameInput.value.trim();
+            
+            let newUrl = `${window.location.origin}${window.location.pathname}?room=${newRoomId}`;
+            if (roomName) {
+                newUrl += `&name=${encodeURIComponent(roomName)}`;
+            }
+            
+            // Open in new tab
+            window.open(newUrl, '_blank');
+            
+            // Close dialog and reset
+            elements.newRoomOverlay.classList.remove('show');
+            elements.roomNameInput.value = '';
+        });
+
+        // Allow Enter key to create room
+        elements.roomNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                elements.createRoomBtn.click();
+            }
+        });
+
+        // Share functionality
+        elements.shareBtn.addEventListener('click', () => {
+            let shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+            if (currentRoomName) {
+                shareUrl += `&name=${encodeURIComponent(currentRoomName)}`;
+            }
+            elements.shareLinkBox.textContent = shareUrl;
+            elements.shareOverlay.classList.add('show');
+        });
+
+        elements.shareDialogClose.addEventListener('click', () => {
+            elements.shareOverlay.classList.remove('show');
+        });
+
+        elements.copyLinkBtn.addEventListener('click', async () => {
+            let shareUrl = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+            if (currentRoomName) {
+                shareUrl += `&name=${encodeURIComponent(currentRoomName)}`;
+            }
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                showCopyNotification();
+                elements.shareOverlay.classList.remove('show');
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        });
+
+        function showCopyNotification() {
+            elements.copyNotification.classList.add('show');
+            setTimeout(() => {
+                elements.copyNotification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Submit message
+        elements.submitButton.addEventListener('click', submitMessage);
+        elements.messageField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitMessage();
+            }
+        });
+
+        async function submitMessage() {
+            const content = elements.messageField.value.trim();
+            if (!content) return;
+
+            const author = isAnonymousMode ? 'Anonymous' : 'User';
+
+            await push(messagesRef, {
+                text: content,
+                author: author,
+                userId: currentUser,
+                timestamp: serverTimestamp(),
+                reactions: {}
+            });
+
+            elements.messageField.value = '';
+        }
+
+        // Listen for messages
+        onValue(messagesRef, (snapshot) => {
+            elements.chatView.innerHTML = '';
+            const msgs = [];
+
+            snapshot.forEach((child) => {
+                msgs.push({
+                    id: child.key,
+                    ...child.val()
+                });
+            });
+
+            if (msgs.length === 0) {
+                elements.chatView.innerHTML = `
+                    <div class="placeholder">
+                        <div class="placeholder-icon">👋</div>
+                        <h3>Welcome to Your Private Chatroom</h3>
+                        <p>🔒 Say What You Really Think — No Names, No Judgments
+Tired of curating your online persona? Anonymous Chat lets you have real conversations without the social pressure. Share ideas, ask awkward questions, get honest feedback — all without anyone knowing who you are.</p>
+                        <p style="margin-top: 20px; font-size: 14px;">💡 <strong>Tip:</strong> Click "Share Link" to invite others to this chatroom</p>
+                        
+                        <div class="safety-note">
+                            <h4>🔒 Safe & Secure</h4>
+                            <ul>
+                                <li>Your messages are private to this room only</li>
+                                <li>Use Anonymous mode for complete privacy</li>
+                                <li>No personal data is tracked or stored</li>
+                                <li>Each room is separate and secure</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            msgs.forEach(msg => {
+                const msgEl = buildMessage(msg);
+                elements.chatView.appendChild(msgEl);
+            });
+
+            elements.chatView.scrollTop = elements.chatView.scrollHeight;
+        });
+
+        function buildMessage(msg) {
+            const container = document.createElement('div');
+            container.className = 'chat-message';
+
+            const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now';
+
+            const reactionData = msg.reactions || {};
+            const emojiList = ['❤️', '😂', '👍', '🎉', '🔥', '🤔', '😘'];
+            
+            const reactionHTML = emojiList.map(emoji => {
+                const count = Object.values(reactionData).filter(r => r === emoji).length;
+                const active = reactionData[currentUser] === emoji ? 'selected' : '';
+                return `<button class="reaction ${active}" data-emoji="${emoji}" data-id="${msg.id}">${emoji}${count > 0 ? ' ' + count : ''}</button>`;
+            }).join('');
+
+            const isOwner = msg.userId === currentUser;
+            const optionsHTML = isOwner ? `
+                <div class="message-options">
+                    <button class="option-btn edit" data-id="${msg.id}">Edit</button>
+                    <button class="option-btn remove" data-id="${msg.id}">Delete</button>
+                </div>
+            ` : '';
+
+            container.innerHTML = `
+                <div class="message-top">
+                    <span class="message-author">${escapeText(msg.author)}</span>
+                    <span class="message-timestamp">${timeStr}</span>
+                </div>
+                <div class="message-content">${escapeText(msg.text)}</div>
+                <div class="message-bottom">
+                    <div class="reaction-group">${reactionHTML}</div>
+                    ${optionsHTML}
+                </div>
+            `;
+
+            container.querySelectorAll('.reaction').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    handleReaction(btn.dataset.id, btn.dataset.emoji);
+                });
+            });
+
+            if (isOwner) {
+                container.querySelector('.edit').addEventListener('click', () => {
+                    openEditDialog(msg.id, msg.text);
+                });
+
+                container.querySelector('.remove').addEventListener('click', () => {
+                    if (confirm('Remove this message?')) {
+                        removeMessage(msg.id);
+                    }
+                });
+            }
+
+            return container;
+        }
+
+        function handleReaction(msgId, emoji) {
+            const msgReactionRef = ref(db, `rooms/${currentRoomId}/messages/${msgId}/reactions/${currentUser}`);
+            const reactionsRef = ref(db, `rooms/${currentRoomId}/messages/${msgId}/reactions`);
+            
+            onValue(reactionsRef, (snapshot) => {
+                const reactions = snapshot.val() || {};
+                if (reactions[currentUser] === emoji) {
+                    remove(msgReactionRef);
+                } else {
+                    update(ref(db, `rooms/${currentRoomId}/messages/${msgId}/reactions`), {
+                        [currentUser]: emoji
+                    });
+                }
+            }, { onlyOnce: true });
+        }
+
+        function removeMessage(msgId) {
+            remove(ref(db, `rooms/${currentRoomId}/messages/${msgId}`));
+        }
+
+        function openEditDialog(msgId, text) {
+            editingMessageId = msgId;
+            elements.editField.value = text || '';
+            elements.editOverlay.classList.add('show');
+        }
+
+        function closeEditDialog() {
+            elements.editOverlay.classList.remove('show');
+            editingMessageId = null;
+            elements.editField.value = '';
+        }
+
+        elements.dialogClose.addEventListener('click', closeEditDialog);
+        elements.cancelButton.addEventListener('click', closeEditDialog);
+
+        elements.saveButton.addEventListener('click', () => {
+            if (editingMessageId) {
+                const updatedText = elements.editField.value.trim();
+                if (updatedText) {
+                    update(ref(db, `rooms/${currentRoomId}/messages/${editingMessageId}`), {
+                        text: updatedText,
+                        edited: true
+                    });
+                }
+                closeEditDialog();
+            }
+        });
+
+        function escapeText(text) {
+            const temp = document.createElement('div');
+            temp.textContent = text;
+            return temp.innerHTML;
+        }
+    </script>
+</body>
+</html>
