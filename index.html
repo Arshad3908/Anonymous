@@ -94,6 +94,29 @@
             margin-top: 2px;
         }
 
+        /* Presence Indicator Styles */
+        .presence-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .presence-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .controls {
             display: flex;
             gap: 12px;
@@ -169,6 +192,46 @@
         .chat-view::-webkit-scrollbar-thumb {
             background: var(--border);
             border-radius: 3px;
+        }
+
+        /* Typing Indicator Styles */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
         }
 
         .placeholder {
@@ -265,6 +328,61 @@
             margin-bottom: 12px;
             animation: fadeIn 0.3s ease;
             border: 1px solid var(--border);
+            position: relative;
+        }
+
+        /* Threading Styles */
+        .chat-message.is-reply {
+            margin-left: 32px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .reply-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .reply-icon {
+            font-size: 14px;
+        }
+
+        .replying-to-banner {
+            background: var(--bg-input);
+            border-left: 3px solid var(--primary);
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .replying-to-content {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cancel-reply-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .cancel-reply-btn:hover {
+            color: var(--danger);
         }
 
         @keyframes fadeIn {
@@ -360,6 +478,10 @@
 
         .option-btn.remove:hover {
             color: var(--danger);
+        }
+
+        .option-btn.reply:hover {
+            color: var(--primary);
         }
 
         .compose-area {
@@ -594,6 +716,10 @@
             .new-room-btn, .action-button {
                 width: 100%;
             }
+
+            .chat-message.is-reply {
+                margin-left: 16px;
+            }
         }
     </style>
 </head>
@@ -605,6 +731,10 @@
                 <div>
                     <h1 class="app-title">Anonymous Chat</h1>
                     <div class="room-id-display" id="roomIdDisplay">Room: Loading...</div>
+                    <div class="presence-indicator">
+                        <span class="presence-dot"></span>
+                        <span id="presenceCount">0 online</span>
+                    </div>
                 </div>
             </div>
             <div class="controls">
@@ -617,13 +747,27 @@
 
         <div class="chat-view" id="chatView">
             <div class="placeholder">
-                <div class="placeholder-icon">💭</div>
-                <h3>Welcome to this Chatroom</h3>
-                <p>Share the link to invite others to this conversation</p>
+                <div class="placeholder-icon">👋</div>
+                <h3>Welcome to Your Private Chatroom</h3>
+                <p>🔒 Say What You Really Think. No Names, No Judgments
+Tired of curating your online persona? Anonymous Chat lets you have real conversations without the social pressure. Share ideas, ask awkward questions, get honest feedback, all without anyone knowing who you are.</p>
+                <p style="margin-top: 20px; font-size: 14px;">💡 <strong>Tip:</strong> Click "Share Link" to invite others to this chatroom</p>
+                
+                <div class="safety-note">
+                    <h4>🔒 Safe & Secure</h4>
+                    <ul>
+                        <li>Your messages are private to this room only</li>
+                        <li>Use Anonymous mode for complete privacy</li>
+                        <li>No personal data is tracked or stored</li>
+                        <li>Each room is separate and secure</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
         <div class="compose-area">
+            <div id="replyingToBanner"></div>
+            
             <div class="identity-row">
                 <button class="anonymous-btn" id="anonymousBtn">
                     👤 Anonymous
@@ -641,9 +785,9 @@
         </div>
 
         <div class="footer">
-            <p>Built with ❤️ by <span class="creator">MATHRICKS Statisticians</span></p>
+            <p>Built with ❤️ by <span class="creator">MATHRICKS Statisticians,Class Of 2025</span></p>
             <p style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">Speak freely. No profiles. No receipts</p>
-            <p style="font-size: 8px; margin-top: 8px; color: var(--text-muted);">Copyright @Fakowajo Kehinde O.</p>
+            <p style="font-size: 10px; margin-top: 8px; color: var(--text-muted);">Copyright @Fakowajo Kehinde Oluwasola.</p>
         </div>
     </div>
 
@@ -688,17 +832,17 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue, remove, update, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, push, onValue, remove, update, serverTimestamp, set, onDisconnect } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDq6dQlaGExNJ696-VpqcqEo7ZeIbn5Iek",
-            authDomain: "mathricks-statisticians.firebaseapp.com",
-            databaseURL: "https://mathricks-statisticians-default-rtdb.firebaseio.com",
-            projectId: "mathricks-statisticians",
-            storageBucket: "mathricks-statisticians.firebasestorage.app",
-            messagingSenderId: "526542953452",
-            appId: "1:526542953452:web:1be468285a2d5d7bde7ec9",
-            measurementId: "G-17GMVQRFW0"
+            apiKey: "AIzaSyDTa06HhscQcSjL3gBMWg6CBuaSKGypths",
+            authDomain: "oauanonymous-chat.firebaseapp.com",
+            databaseURL: "https://oauanonymous-chat-default-rtdb.firebaseio.com",
+            projectId: "oauanonymous-chat",
+            storageBucket: "oauanonymous-chat.firebasestorage.app",
+            messagingSenderId: "603962966216",
+            appId: "1:603962966216:web:a917af65da7a18f0f865fd",
+            measurementId: "G-1VCS50W3TF"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -730,6 +874,8 @@
         let currentRoomId = getRoomId();
         let currentRoomName = getRoomName();
         let messagesRef = ref(db, `rooms/${currentRoomId}/messages`);
+        let typingRef = ref(db, `rooms/${currentRoomId}/typing`);
+        let presenceRef = ref(db, `rooms/${currentRoomId}/presence`);
 
         // Get or create user ID
         let currentUser = localStorage.getItem('userId');
@@ -761,7 +907,9 @@
             newRoomDialogClose: document.getElementById('newRoomDialogClose'),
             roomNameInput: document.getElementById('roomNameInput'),
             cancelNewRoomBtn: document.getElementById('cancelNewRoomBtn'),
-            createRoomBtn: document.getElementById('createRoomBtn')
+            createRoomBtn: document.getElementById('createRoomBtn'),
+            presenceCount: document.getElementById('presenceCount'),
+            replyingToBanner: document.getElementById('replyingToBanner')
         };
 
         // Display room ID and name
@@ -773,6 +921,169 @@
 
         let isAnonymousMode = false;
         let editingMessageId = null;
+        let replyingToMessage = null;
+        let typingTimeout = null;
+
+        // ==================== PRESENCE SYSTEM ====================
+        const userPresenceRef = ref(db, `rooms/${currentRoomId}/presence/${currentUser}`);
+        
+        // Set user as online
+        set(userPresenceRef, {
+            online: true,
+            lastSeen: serverTimestamp()
+        });
+
+        // Remove user on disconnect
+        onDisconnect(userPresenceRef).remove();
+
+        // Listen to presence changes
+        onValue(presenceRef, (snapshot) => {
+            const presence = snapshot.val();
+            let onlineCount = 0;
+            
+            if (presence) {
+                onlineCount = Object.keys(presence).length;
+            }
+            
+            elements.presenceCount.textContent = `${onlineCount} online`;
+        });
+
+        // Update presence on visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                set(userPresenceRef, {
+                    online: true,
+                    lastSeen: serverTimestamp()
+                });
+            }
+        });
+
+        // ==================== TYPING INDICATOR SYSTEM ====================
+        const userTypingRef = ref(db, `rooms/${currentRoomId}/typing/${currentUser}`);
+
+        // Clear typing status on disconnect
+        onDisconnect(userTypingRef).remove();
+
+        // Listen to typing indicators
+        onValue(typingRef, (snapshot) => {
+            const typing = snapshot.val();
+            const typingUsers = [];
+            
+            if (typing) {
+                Object.entries(typing).forEach(([userId, data]) => {
+                    if (userId !== currentUser && data.isTyping) {
+                        typingUsers.push(data.author || 'Someone');
+                    }
+                });
+            }
+            
+            updateTypingIndicator(typingUsers);
+        });
+
+        function updateTypingIndicator(users) {
+            const existingIndicator = document.querySelector('.typing-indicator');
+            
+            if (users.length === 0) {
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                return;
+            }
+            
+            let text = '';
+            if (users.length === 1) {
+                text = `${users[0]} is typing`;
+            } else if (users.length === 2) {
+                text = `${users[0]} and ${users[1]} are typing`;
+            } else {
+                text = `${users.length} people are typing`;
+            }
+            
+            if (existingIndicator) {
+                existingIndicator.querySelector('span').textContent = text;
+            } else {
+                const indicator = document.createElement('div');
+                indicator.className = 'typing-indicator';
+                indicator.innerHTML = `
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span>${text}</span>
+                `;
+                elements.chatView.appendChild(indicator);
+                elements.chatView.scrollTop = elements.chatView.scrollHeight;
+            }
+        }
+
+        function setTypingStatus(isTyping) {
+            const author = isAnonymousMode ? 'Anonymous' : 'User';
+            
+            if (isTyping) {
+                set(userTypingRef, {
+                    isTyping: true,
+                    author: author,
+                    timestamp: serverTimestamp()
+                });
+            } else {
+                remove(userTypingRef);
+            }
+        }
+
+        // Handle typing in message field
+        elements.messageField.addEventListener('input', () => {
+            const hasText = elements.messageField.value.trim().length > 0;
+            
+            if (hasText) {
+                setTypingStatus(true);
+                
+                // Clear existing timeout
+                if (typingTimeout) {
+                    clearTimeout(typingTimeout);
+                }
+                
+                // Set timeout to clear typing status
+                typingTimeout = setTimeout(() => {
+                    setTypingStatus(false);
+                }, 2000);
+            } else {
+                setTypingStatus(false);
+                if (typingTimeout) {
+                    clearTimeout(typingTimeout);
+                }
+            }
+        });
+
+        // Clear typing status when message is sent
+        function clearTypingStatus() {
+            setTypingStatus(false);
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+        }
+
+        // ==================== THREADING SYSTEM ====================
+        function setReplyingTo(messageId, messageText, author) {
+            replyingToMessage = messageId;
+            const truncatedText = messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText;
+            
+            elements.replyingToBanner.innerHTML = `
+                <div class="replying-to-banner">
+                    <div class="replying-to-content">
+                        <strong>↩️ Replying to ${escapeText(author)}:</strong> ${escapeText(truncatedText)}
+                    </div>
+                    <button class="cancel-reply-btn" onclick="cancelReply()">×</button>
+                </div>
+            `;
+            
+            elements.messageField.focus();
+        }
+
+        window.cancelReply = function() {
+            replyingToMessage = null;
+            elements.replyingToBanner.innerHTML = '';
+        };
 
         // Theme toggle
         elements.themeSwitch.addEventListener('click', () => {
@@ -818,15 +1129,12 @@
                 newUrl += `&name=${encodeURIComponent(roomName)}`;
             }
             
-            // Open in new tab
             window.open(newUrl, '_blank');
             
-            // Close dialog and reset
             elements.newRoomOverlay.classList.remove('show');
             elements.roomNameInput.value = '';
         });
 
-        // Allow Enter key to create room
         elements.roomNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 elements.createRoomBtn.click();
@@ -883,20 +1191,28 @@
 
             const author = isAnonymousMode ? 'Anonymous' : 'User';
 
-            await push(messagesRef, {
+            const messageData = {
                 text: content,
                 author: author,
                 userId: currentUser,
                 timestamp: serverTimestamp(),
                 reactions: {}
-            });
+            };
+
+            // Add reply information if replying
+            if (replyingToMessage) {
+                messageData.replyTo = replyingToMessage;
+            }
+
+            await push(messagesRef, messageData);
 
             elements.messageField.value = '';
+            clearTypingStatus();
+            cancelReply();
         }
 
         // Listen for messages
         onValue(messagesRef, (snapshot) => {
-            elements.chatView.innerHTML = '';
             const msgs = [];
 
             snapshot.forEach((child) => {
@@ -906,6 +1222,14 @@
                 });
             });
 
+            renderMessages(msgs);
+        });
+
+        function renderMessages(msgs) {
+            // Remove all messages except typing indicator
+            const typingIndicator = document.querySelector('.typing-indicator');
+            elements.chatView.innerHTML = '';
+            
             if (msgs.length === 0) {
                 elements.chatView.innerHTML = `
                     <div class="placeholder">
@@ -930,17 +1254,31 @@ Tired of curating your online persona? Anonymous Chat lets you have real convers
             }
 
             msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            
+            // Create a map for quick message lookup
+            const messageMap = new Map(msgs.map(msg => [msg.id, msg]));
+            
             msgs.forEach(msg => {
-                const msgEl = buildMessage(msg);
+                const msgEl = buildMessage(msg, messageMap);
                 elements.chatView.appendChild(msgEl);
             });
 
-            elements.chatView.scrollTop = elements.chatView.scrollHeight;
-        });
+            // Re-add typing indicator if it exists
+            if (typingIndicator) {
+                elements.chatView.appendChild(typingIndicator);
+            }
 
-        function buildMessage(msg) {
+            elements.chatView.scrollTop = elements.chatView.scrollHeight;
+        }
+
+        function buildMessage(msg, messageMap) {
             const container = document.createElement('div');
             container.className = 'chat-message';
+            
+            // Add reply styling if this is a reply
+            if (msg.replyTo) {
+                container.classList.add('is-reply');
+            }
 
             const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now';
 
@@ -954,14 +1292,32 @@ Tired of curating your online persona? Anonymous Chat lets you have real convers
             }).join('');
 
             const isOwner = msg.userId === currentUser;
-            const optionsHTML = isOwner ? `
+            
+            // Build reply indicator HTML
+            let replyHTML = '';
+            if (msg.replyTo && messageMap.has(msg.replyTo)) {
+                const replyToMsg = messageMap.get(msg.replyTo);
+                const replyText = replyToMsg.text.length > 40 ? replyToMsg.text.substring(0, 40) + '...' : replyToMsg.text;
+                replyHTML = `
+                    <div class="reply-indicator">
+                        <span class="reply-icon">↩️</span>
+                        <span>Replying to <strong>${escapeText(replyToMsg.author)}</strong>: ${escapeText(replyText)}</span>
+                    </div>
+                `;
+            }
+            
+            const optionsHTML = `
                 <div class="message-options">
-                    <button class="option-btn edit" data-id="${msg.id}">Edit</button>
-                    <button class="option-btn remove" data-id="${msg.id}">Delete</button>
+                    <button class="option-btn reply" data-id="${msg.id}" data-text="${escapeAttribute(msg.text)}" data-author="${escapeAttribute(msg.author)}">Reply</button>
+                    ${isOwner ? `
+                        <button class="option-btn edit" data-id="${msg.id}">Edit</button>
+                        <button class="option-btn remove" data-id="${msg.id}">Delete</button>
+                    ` : ''}
                 </div>
-            ` : '';
+            `;
 
             container.innerHTML = `
+                ${replyHTML}
                 <div class="message-top">
                     <span class="message-author">${escapeText(msg.author)}</span>
                     <span class="message-timestamp">${timeStr}</span>
@@ -979,6 +1335,14 @@ Tired of curating your online persona? Anonymous Chat lets you have real convers
                 });
             });
 
+            // Reply button
+            const replyBtn = container.querySelector('.reply');
+            if (replyBtn) {
+                replyBtn.addEventListener('click', () => {
+                    setReplyingTo(replyBtn.dataset.id, replyBtn.dataset.text, replyBtn.dataset.author);
+                });
+            }
+
             if (isOwner) {
                 container.querySelector('.edit').addEventListener('click', () => {
                     openEditDialog(msg.id, msg.text);
@@ -994,20 +1358,28 @@ Tired of curating your online persona? Anonymous Chat lets you have real convers
             return container;
         }
 
-        function handleReaction(msgId, emoji) {
+        async function handleReaction(msgId, emoji) {
             const msgReactionRef = ref(db, `rooms/${currentRoomId}/messages/${msgId}/reactions/${currentUser}`);
             const reactionsRef = ref(db, `rooms/${currentRoomId}/messages/${msgId}/reactions`);
             
-            onValue(reactionsRef, (snapshot) => {
+            try {
+                // Get current reactions
+                const snapshot = await new Promise((resolve, reject) => {
+                    onValue(reactionsRef, resolve, { onlyOnce: true });
+                });
+                
                 const reactions = snapshot.val() || {};
+                
                 if (reactions[currentUser] === emoji) {
-                    remove(msgReactionRef);
+                    // Remove reaction if clicking the same emoji
+                    await remove(msgReactionRef);
                 } else {
-                    update(ref(db, `rooms/${currentRoomId}/messages/${msgId}/reactions`), {
-                        [currentUser]: emoji
-                    });
+                    // Add or change reaction
+                    await set(msgReactionRef, emoji);
                 }
-            }, { onlyOnce: true });
+            } catch (error) {
+                console.error('Error handling reaction:', error);
+            }
         }
 
         function removeMessage(msgId) {
@@ -1047,8 +1419,16 @@ Tired of curating your online persona? Anonymous Chat lets you have real convers
             temp.textContent = text;
             return temp.innerHTML;
         }
+
+        function escapeAttribute(text) {
+            return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            clearTypingStatus();
+            remove(userPresenceRef);
+        });
     </script>
 </body>
-
 </html>
-
